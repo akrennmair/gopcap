@@ -23,6 +23,18 @@ type PacketTime struct {
 	Usec int32
 }
 
+// HeaderType enumerates the set of known headers we can decode.
+type HeaderType int
+
+// Header is an interface for a packet header.
+type Header interface {
+	// Returns the set of bytes that make up this header
+	Bytes() []byte
+
+	// Returns the header type of this header
+	HeaderType() HeaderType
+}
+
 // Packet is a single packet parsed from a pcap file.
 type Packet struct {
 	Time   PacketTime // packet send/receive time
@@ -34,8 +46,8 @@ type Packet struct {
 	DestMac uint64
 	SrcMac  uint64
 
-	Headers []interface{} // decoded headers, in order
-	Payload []byte        // remaining non-header bytes
+	Headers []Header // decoded headers, in order
+	Payload []byte   // remaining non-header bytes
 }
 
 // Reader parses pcap files.
@@ -145,7 +157,6 @@ func (r *Reader) readUint16() uint16 {
 	}
 	return asUint16(data, r.flip)
 }
-
 
 // Writer writes a pcap file.
 type Writer struct {
