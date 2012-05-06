@@ -3,9 +3,9 @@ package pcap
 import (
 	"fmt"
 	"net"
+	"time"
 	"reflect"
 	"strings"
-	"time"
 )
 
 const (
@@ -49,41 +49,6 @@ const (
 	LINKTYPE_LINUX_IRDA       = 144
 	LINKTYPE_LINUX_LAPD       = 177
 )
-
-const (
-	HEADER_IP4 HeaderType = iota
-	HEADER_IP6
-	HEADER_ARP
-	HEADER_ICMP
-	HEADER_TCP
-	HEADER_UDP
-)
-
-func (h HeaderType) String() string {
-	switch h {
-	case HEADER_IP4:
-		return "IPv4"
-	case HEADER_IP6:
-		return "IPv6"
-	case HEADER_ARP:
-		return "ARP"
-	case HEADER_ICMP:
-		return "ICMP"
-	case HEADER_TCP:
-		return "TCP"
-	case HEADER_UDP:
-		return "UDP"
-	}
-	return "UNKNOWN"
-}
-
-type baseHeader struct {
-	bytes []byte
-}
-
-func (b *baseHeader) Bytes() []byte {
-	return b.bytes
-}
 
 type addrHdr interface {
 	SrcAddr() string
@@ -138,7 +103,7 @@ func (p *Packet) TimeString() string {
 	return fmt.Sprintf("%02d:%02d:%02d.%06d ", t.Hour, t.Minute, t.Second, p.Time.Usec)
 }
 
-func (p *Packet) headerString(headers []Header) string {
+func (p *Packet) headerString(headers []interface{}) string {
 	// If there's just one header, return that.
 	if len(headers) == 1 {
 		if hdr, ok := headers[0].(stringer); ok {
@@ -183,7 +148,6 @@ func (p *Packet) String() string {
 }
 
 type Arphdr struct {
-	baseHeader
 	Addrtype          uint16
 	Protocol          uint16
 	HwAddressSize     uint8
@@ -193,10 +157,6 @@ type Arphdr struct {
 	SourceProtAddress []byte
 	DestHwAddress     []byte
 	DestProtAddress   []byte
-}
-
-func (p *Arphdr) HeaderType() HeaderType {
-	return HEADER_ARP
 }
 
 func Arpop(op uint16) string {
@@ -235,13 +195,10 @@ func (p *Packet) decodeArp() {
 	arp.DestProtAddress = pkt[8+2*arp.HwAddressSize+arp.ProtAddressSize : 8+2*arp.HwAddressSize+2*arp.ProtAddressSize]
 
 	p.Headers = append(p.Headers, arp)
-	headerSize := 8 + 2*arp.HwAddressSize + 2*arp.ProtAddressSize
-	arp.bytes = p.Payload[:headerSize]
-	p.Payload = p.Payload[headerSize:]
+	p.Payload = p.Payload[8+2*arp.HwAddressSize+2*arp.ProtAddressSize:]
 }
 
 type Iphdr struct {
-	baseHeader
 	Version    uint8
 	Ihl        uint8
 	Tos        uint8
@@ -254,10 +211,6 @@ type Iphdr struct {
 	Checksum   uint16
 	SrcIp      []byte
 	DestIp     []byte
-}
-
-func (p *Iphdr) HeaderType() HeaderType {
-	return HEADER_IP4
 }
 
 func (p *Packet) decodeIp() {
@@ -277,13 +230,11 @@ func (p *Packet) decodeIp() {
 	ip.Checksum = decodeuint16(pkt[10:12])
 	ip.SrcIp = pkt[12:16]
 	ip.DestIp = pkt[16:20]
-	pStart := ip.Ihl * 4
 	pEnd := int(ip.Length)
 	if pEnd > len(pkt) {
 		pEnd = len(pkt)
 	}
-	ip.bytes = pkt[:pStart]
-	p.Payload = pkt[pStart:pEnd]
+	p.Payload = pkt[ip.Ihl*4 : pEnd]
 	p.Headers = append(p.Headers, ip)
 
 	switch ip.Protocol {
@@ -311,7 +262,6 @@ func (ip *Iphdr) Len() int {
 }
 
 type Tcphdr struct {
-	baseHeader
 	SrcPort    uint16
 	DestPort   uint16
 	Seq        uint32
@@ -322,10 +272,6 @@ type Tcphdr struct {
 	Checksum   uint16
 	Urgent     uint16
 	Data       []byte
-}
-
-func (p *Tcphdr) HeaderType() HeaderType {
-	return HEADER_TCP
 }
 
 const (
@@ -352,7 +298,6 @@ func (p *Packet) decodeTcp() {
 	tcp.Window = decodeuint16(pkt[14:16])
 	tcp.Checksum = decodeuint16(pkt[16:18])
 	tcp.Urgent = decodeuint16(pkt[18:20])
-	tcp.bytes = pkt[:tcp.DataOffset*4]
 	p.Payload = pkt[tcp.DataOffset*4:]
 	p.Headers = append(p.Headers, tcp)
 }
@@ -396,15 +341,10 @@ func (tcp *Tcphdr) FlagsString() string {
 }
 
 type Udphdr struct {
-	baseHeader
 	SrcPort  uint16
 	DestPort uint16
 	Length   uint16
 	Checksum uint16
-}
-
-func (p *Udphdr) HeaderType() HeaderType {
-	return HEADER_UDP
 }
 
 func (p *Packet) decodeUdp() {
@@ -415,7 +355,6 @@ func (p *Packet) decodeUdp() {
 	udp.Length = decodeuint16(pkt[4:6])
 	udp.Checksum = decodeuint16(pkt[6:8])
 	p.Headers = append(p.Headers, udp)
-	udp.bytes = pkt[:8]
 	p.Payload = pkt[8:]
 }
 
@@ -426,17 +365,12 @@ func (udp *Udphdr) String(hdr addrHdr) string {
 }
 
 type Icmphdr struct {
-	baseHeader
 	Type     uint8
 	Code     uint8
 	Checksum uint16
 	Id       uint16
 	Seq      uint16
 	Data     []byte
-}
-
-func (p *Icmphdr) HeaderType() HeaderType {
-	return HEADER_ICMP
 }
 
 func (p *Packet) decodeIcmp() *Icmphdr {
@@ -447,7 +381,6 @@ func (p *Packet) decodeIcmp() *Icmphdr {
 	icmp.Checksum = decodeuint16(pkt[2:4])
 	icmp.Id = decodeuint16(pkt[4:6])
 	icmp.Seq = decodeuint16(pkt[6:8])
-	icmp.bytes = pkt[:8]
 	p.Payload = pkt[8:]
 	p.Headers = append(p.Headers, icmp)
 	return icmp
@@ -485,7 +418,6 @@ func (icmp *Icmphdr) TypeString() string {
 }
 
 type Ip6hdr struct {
-	baseHeader
 	// http://www.networksorcery.com/enp/protocol/ipv6.htm
 	Version      uint8  // 4 bits
 	TrafficClass uint8  // 8 bits
@@ -495,10 +427,6 @@ type Ip6hdr struct {
 	HopLimit     uint8  // 8 bits
 	SrcIp        []byte // 16 bytes
 	DestIp       []byte // 16 bytes
-}
-
-func (p *Ip6hdr) HeaderType() HeaderType {
-	return HEADER_IP6
 }
 
 func (p *Packet) decodeIp6() {
@@ -512,7 +440,6 @@ func (p *Packet) decodeIp6() {
 	ip6.HopLimit = pkt[7]
 	ip6.SrcIp = pkt[8:24]
 	ip6.DestIp = pkt[24:40]
-	ip6.bytes = pkt[:40]
 	p.Payload = pkt[40:]
 	p.Headers = append(p.Headers, ip6)
 
