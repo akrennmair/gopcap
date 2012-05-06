@@ -7,10 +7,10 @@ package pcap
 */
 import "C"
 import (
-	"net"
-	"os"
-	"syscall"
 	"unsafe"
+	"os"
+	"net"
+	"syscall"
 )
 
 type Pcap struct {
