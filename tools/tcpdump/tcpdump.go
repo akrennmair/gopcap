@@ -54,7 +54,7 @@ func main() {
 		*device = devs[0].Name
 	}
 
-	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 0)
+	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 1000)
 	if h == nil {
 		fmt.Fprintf(errout, "tcpdump: %s\n", err)
 		errout.Flush()
