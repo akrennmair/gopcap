@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dustin/gopcap"
+	"github.com/miekg/pcap"
 )
 
 const (
@@ -54,7 +54,7 @@ func main() {
 		*device = devs[0].Name
 	}
 
-	h, err := pcap.Openlive(*device, int32(*snaplen), true, 0)
+	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 1000)
 	if h == nil {
 		fmt.Fprintf(errout, "tcpdump: %s\n", err)
 		errout.Flush()
@@ -63,7 +63,7 @@ func main() {
 
 	if expr != "" {
 		ferr := h.Setfilter(expr)
-		if ferr != "" {
+		if ferr != nil {
 			fmt.Fprintf(out, "tcpdump: %s\n", ferr)
 			out.Flush()
 		}
