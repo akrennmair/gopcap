@@ -244,7 +244,7 @@ type Vlanhdr struct {
 }
 
 func (v *Vlanhdr) String() {
-	fmt.Sprintf("VLAN Prioity:%d Drop:%v Tag:%d", v.Prioity, v.DropEligible, v.VlanIdentifier)
+	fmt.Sprintf("VLAN Priority:%d Drop:%v Tag:%d", v.Priority, v.DropEligible, v.VlanIdentifier)
 }
 
 func (p *Packet) decodeVlan() {
