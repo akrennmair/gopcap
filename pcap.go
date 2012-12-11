@@ -100,10 +100,10 @@ func (p *Pcap) NextEx() (pkt *Packet, result int32) {
 	result = int32(C.hack_pcap_next_ex(p.cptr, &pkthdr, &buf_ptr))
 
 	buf = unsafe.Pointer(buf_ptr)
-
 	if nil == buf {
 		return
 	}
+
 	pkt = new(Packet)
 	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec))
 	pkt.Caplen = uint32(pkthdr.caplen)
