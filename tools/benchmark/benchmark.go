@@ -5,53 +5,21 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"time"
 
-	"github.com/akrennmair/gopcap"
+	"github.com/gconnell/gopcap"
 )
 
 func main() {
-	var device *string = flag.String("i", "", "interface")
-	var snaplen *int = flag.Int("s", 65535, "snaplen")
-	var count *int = flag.Int("c", 10000, "packet count")
+	var filename *string = flag.String("file", "", "filename")
 	var decode *bool = flag.Bool("d", false, "If true, decode each packet")
 	var cpuprofile *string = flag.String("cpuprofile", "", "filename")
 
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s -c packetcount [ -i interface ] [ -s snaplen ] [ -X ] [ -cpuprofile filename ] expression\n", os.Args[0])
-		os.Exit(1)
-	}
-
 	flag.Parse()
 
-	var expr string
-	if len(flag.Args()) > 0 {
-		expr = flag.Arg(0)
-	}
-
-	if *device == "" {
-		devs, err := pcap.Findalldevs()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "benchmark: couldn't find any devices: %s\n", err)
-		}
-		if 0 == len(devs) {
-			flag.Usage()
-		}
-		*device = devs[0].Name
-	}
-
-	h, err := pcap.Openlive(*device, int32(*snaplen), true, 0)
-	if h == nil {
-		fmt.Fprintf(os.Stderr, "benchmark: %s\n", err)
-		return
-	}
-	defer h.Close()
-
-	if expr != "" {
-		ferr := h.Setfilter(expr)
-		if ferr != nil {
-			fmt.Fprintf(os.Stderr, "benchmark: %s\n", ferr)
-			return
-		}
+	h, err := pcap.Openoffline(*filename)
+	if err != nil {
+		fmt.Printf("Couldn't create pcap reader: %v", err)
 	}
 
 	if *cpuprofile != "" {
@@ -66,13 +34,16 @@ func main() {
 		}
 	}
 
-	i := 0
-	for pkt := h.Next(); pkt != nil; pkt = h.Next() {
-		if *decode {
+	i, nilPackets := 0, 0
+	start := time.Now()
+	for pkt, code := h.NextEx(); code != -2; pkt, code = h.NextEx() {
+		if pkt == nil {
+			nilPackets++
+		} else if *decode {
 			pkt.Decode()
 		}
-		if i++; i >= *count {
-			break
-		}
+		i++
 	}
+	duration := time.Since(start)
+	fmt.Printf("Took %v to process %v packets, %v per packet, %d nil packets\n", duration, i, duration/time.Duration(i), nilPackets)
 }
