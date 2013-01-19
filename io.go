@@ -170,7 +170,7 @@ func NewWriter(writer io.Writer, header *FileHeader) (*Writer, error) {
 func (w *Writer) Write(pkt *Packet) error {
 	binary.LittleEndian.PutUint32(w.buf, uint32(pkt.Time.Unix()))
 	binary.LittleEndian.PutUint32(w.buf[4:], uint32(pkt.Time.Nanosecond()))
-	binary.LittleEndian.PutUint32(w.buf[8:], uint32(pkt.Time.Unix()))
+	binary.LittleEndian.PutUint32(w.buf[8:], pkt.Caplen)
 	binary.LittleEndian.PutUint32(w.buf[12:], pkt.Len)
 	if _, err := w.writer.Write(w.buf[:16]); err != nil {
 		return err
