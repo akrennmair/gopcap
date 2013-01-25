@@ -108,7 +108,6 @@ func decodemac(pkt []byte) uint64 {
 // Decode decodes the headers of a Packet.
 func (p *Packet) Decode() {
 
-
 	p.Type = int(binary.BigEndian.Uint16(p.Data[12:14]))
 	p.DestMac = decodemac(p.Data[0:6])
 	p.SrcMac = decodemac(p.Data[6:12])

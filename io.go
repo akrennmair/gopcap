@@ -30,9 +30,11 @@ type PacketTime struct {
 
 // Packet is a single packet parsed from a pcap file.
 type Packet struct {
+	// porting from 'pcap_pkthdr' struct
 	Time   time.Time // packet send/receive time
 	Caplen uint32    // bytes stored in the file (caplen <= len)
 	Len    uint32    // bytes sent/received
+
 	Data   []byte    // packet data
 
 	Type    int // protocol type, see LINKTYPE_*
