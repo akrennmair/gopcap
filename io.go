@@ -20,7 +20,7 @@ type FileHeader struct {
 	// NOTE: 'Network' property has been changed to `linktype`
 	// Please see pcap/pcap.h header file.
 	//     Network      uint32
-	LinkType     uint32
+	LinkType uint32
 }
 
 // Reader parses pcap files.
@@ -57,7 +57,7 @@ func NewReader(reader io.Reader) (*Reader, error) {
 		TimeZone:     r.readInt32(),
 		SigFigs:      r.readUint32(),
 		SnapLen:      r.readUint32(),
-		LinkType:      r.readUint32(),
+		LinkType:     r.readUint32(),
 	}
 	return r, nil
 }
@@ -79,7 +79,7 @@ func (r *Reader) Next() *Packet {
 		return nil
 	}
 	return &Packet{
-		Time: time.Unix(int64(timeSec), int64(timeUsec)),
+		Time:   time.Unix(int64(timeSec), int64(timeUsec)),
 		Caplen: capLen,
 		Len:    origLen,
 		Data:   data,

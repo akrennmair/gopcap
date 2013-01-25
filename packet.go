@@ -1,11 +1,11 @@
 package pcap
 
 import (
-	"time"
 	"encoding/binary"
-	"reflect"
 	"fmt"
+	"reflect"
 	"strings"
+	"time"
 )
 
 type PacketTime struct {
@@ -20,7 +20,7 @@ type Packet struct {
 	Caplen uint32    // bytes stored in the file (caplen <= len)
 	Len    uint32    // bytes sent/received
 
-	Data   []byte    // packet data
+	Data []byte // packet data
 
 	Type    int // protocol type, see LINKTYPE_*
 	DestMac uint64
@@ -82,7 +82,6 @@ func (p *Packet) headerString(headers []interface{}) string {
 	return fmt.Sprintf("unknown [%s]", strings.Join(typeNames, ","))
 }
 
-
 // String prints a one-line representation of the packet header.
 // The output is suitable for use in a tcpdump program.
 func (p *Packet) String() string {
@@ -109,7 +108,6 @@ func (p *Packet) decodeArp() {
 	p.Headers = append(p.Headers, arp)
 	p.Payload = p.Payload[8+2*arp.HwAddressSize+2*arp.ProtAddressSize:]
 }
-
 
 func (p *Packet) decodeIp() {
 	pkt := p.Payload
@@ -147,7 +145,6 @@ func (p *Packet) decodeIp() {
 	}
 }
 
-
 func (p *Packet) decodeTcp() {
 	pkt := p.Payload
 	tcp := new(Tcphdr)
@@ -163,7 +160,6 @@ func (p *Packet) decodeTcp() {
 	p.Payload = pkt[tcp.DataOffset*4:]
 	p.Headers = append(p.Headers, tcp)
 }
-
 
 func (p *Packet) decodeUdp() {
 	pkt := p.Payload

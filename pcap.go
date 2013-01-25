@@ -16,8 +16,8 @@ import (
 	"errors"
 	"net"
 	"syscall"
-	"unsafe"
 	"time"
+	"unsafe"
 )
 
 type Pcap struct {

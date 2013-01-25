@@ -17,16 +17,14 @@ const (
 	IP_UDP  = 17
 )
 
-
 // port from sf-pcap.c file
 const (
-	TCPDUMP_MAGIC = 0xa1b2c3d4
-	KUZNETZOV_TCPDUMP_MAGIC	= 0xa1b2cd34
-	FMESQUITA_TCPDUMP_MAGIC	= 0xa1b234cd
-	NAVTEL_TCPDUMP_MAGIC = 0xa12b3c4d
-	NSEC_TCPDUMP_MAGIC = 0xa1b23c4d
+	TCPDUMP_MAGIC           = 0xa1b2c3d4
+	KUZNETZOV_TCPDUMP_MAGIC = 0xa1b2cd34
+	FMESQUITA_TCPDUMP_MAGIC = 0xa1b234cd
+	NAVTEL_TCPDUMP_MAGIC    = 0xa12b3c4d
+	NSEC_TCPDUMP_MAGIC      = 0xa1b23c4d
 )
-
 
 /**
  * DLT
@@ -34,35 +32,35 @@ const (
  * have been defined by <net/bpf.h> for ages.
  */
 const (
-	DLT_NULL	= 0	    /* BSD loopback encapsulation */
-	DLT_EN10MB	= 1	    /* Ethernet (10Mb) */
-	DLT_EN3MB	= 2	    /* Experimental Ethernet (3Mb) */
-	DLT_AX25	= 3	    /* Amateur Radio AX.25 */
-	DLT_PRONET	= 4	    /* Proteon ProNET Token Ring */
-	DLT_CHAOS	= 5	    /* Chaos */
-	DLT_IEEE802	= 6	    /* 802.5 Token Ring */
-	DLT_ARCNET	= 7	    /* ARCNET, with BSD-style header */
-	DLT_SLIP	= 8	    /* Serial Line IP */
-	DLT_PPP		= 9	    /* Point-to-point Protocol */
-	DLT_FDDI	= 10	/* FDDI */
+	DLT_NULL    = 0  // BSD loopback encapsulation
+	DLT_EN10MB  = 1  // Ethernet (10Mb)
+	DLT_EN3MB   = 2  // Experimental Ethernet (3Mb)
+	DLT_AX25    = 3  // Amateur Radio AX.25
+	DLT_PRONET  = 4  // Proteon ProNET Token Ring
+	DLT_CHAOS   = 5  // Chaos
+	DLT_IEEE802 = 6  // 802.5 Token Ring
+	DLT_ARCNET  = 7  // ARCNET, with BSD-style header
+	DLT_SLIP    = 8  // Serial Line IP
+	DLT_PPP     = 9  // Point-to-point Protocol
+	DLT_FDDI    = 10 // FDDI
 )
 
 const (
 	ERRBUF_SIZE = 256
 
 	// According to pcap-linktype(7).
-	LINKTYPE_NULL             = DLT_NULL
-	LINKTYPE_ETHERNET         = DLT_EN10MB
-	LINKTYPE_TOKEN_RING       = DLT_IEEE802
+	LINKTYPE_NULL       = DLT_NULL
+	LINKTYPE_ETHERNET   = DLT_EN10MB
+	LINKTYPE_TOKEN_RING = DLT_IEEE802
 
-	LINKTYPE_EXP_ETHERNET	= DLT_EN3MB	/* 3Mb experimental Ethernet */
-	LINKTYPE_AX25		= DLT_AX25
-	LINKTYPE_PRONET		= DLT_PRONET
-	LINKTYPE_CHAOS		= DLT_CHAOS
-	LINKTYPE_ARCNET_BSD	= DLT_ARCNET	/* BSD-style headers */
-	LINKTYPE_SLIP		= DLT_SLIP
-	LINKTYPE_PPP		= DLT_PPP
-	LINKTYPE_FDDI		= DLT_FDDI
+	LINKTYPE_EXP_ETHERNET = DLT_EN3MB /* 3Mb experimental Ethernet */
+	LINKTYPE_AX25         = DLT_AX25
+	LINKTYPE_PRONET       = DLT_PRONET
+	LINKTYPE_CHAOS        = DLT_CHAOS
+	LINKTYPE_ARCNET_BSD   = DLT_ARCNET /* BSD-style headers */
+	LINKTYPE_SLIP         = DLT_SLIP
+	LINKTYPE_PPP          = DLT_PPP
+	LINKTYPE_FDDI         = DLT_FDDI
 
 	LINKTYPE_ARCNET           = 7
 	LINKTYPE_ATM_RFC1483      = 100
@@ -102,7 +100,6 @@ func decodemac(pkt []byte) uint64 {
 	}
 	return mac
 }
-
 
 // Arphdr is a ARP packet header.
 type Arphdr struct {
@@ -224,7 +221,6 @@ type Udphdr struct {
 	Checksum uint16
 }
 
-
 func (udp *Udphdr) String(hdr addrHdr) string {
 	return fmt.Sprintf("UDP %s:%d > %s:%d LEN=%d CHKSUM=%d",
 		hdr.SrcAddr(), int(udp.SrcPort), hdr.DestAddr(), int(udp.DestPort),
@@ -239,7 +235,6 @@ type Icmphdr struct {
 	Seq      uint16
 	Data     []byte
 }
-
 
 func (icmp *Icmphdr) String(hdr addrHdr) string {
 	return fmt.Sprintf("ICMP %s > %s Type = %d Code = %d ",
