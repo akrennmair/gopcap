@@ -207,10 +207,10 @@ func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	for curaddr := addresses; curaddr != nil; curaddr = (*_Ctype_struct_pcap_addr)(curaddr.next) {
 		var a IFAddress
 		var err error
-		if a.IP, err = sockaddr_to_IP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
+		if a.IP, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
 			continue
 		}
-		if a.Netmask, err = sockaddr_to_IP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
+		if a.Netmask, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
 			continue
 		}
 		retval = append(retval, a)
@@ -218,7 +218,7 @@ func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	return
 }
 
-func sockaddr_to_IP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
+func sockaddrToIP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	switch rsa.Family {
 	case syscall.AF_INET:
 		pp := (*syscall.RawSockaddrInet4)(unsafe.Pointer(rsa))
@@ -239,6 +239,12 @@ func sockaddr_to_IP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	return
 }
 
+
+
+/*
+static int
+pcap_inject_pf(pcap_t *p, const void *buf, size_t size)
+*/
 func (p *Pcap) Inject(data []byte) (err error) {
 	buf := (*C.char)(C.malloc((C.size_t)(len(data))))
 
@@ -252,3 +258,4 @@ func (p *Pcap) Inject(data []byte) (err error) {
 	C.free(unsafe.Pointer(buf))
 	return
 }
+
