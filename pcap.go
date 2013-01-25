@@ -51,7 +51,7 @@ func (e *pcapError) Error() string  { return e.string }
 func (p *Pcap) Geterror() error     { return &pcapError{C.GoString(C.pcap_geterr(p.cptr))} }
 func (p *Pcap) Next() (pkt *Packet) { rv, _ := p.NextEx(); return rv }
 
-// Openlive opens a device and returns a *Pcap handler
+// OpenLive opens a device and returns a *Pcap handler
 func OpenLive(device string, snaplen int32, promisc bool, timeout_ms int32) (handle *Pcap, err error) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
