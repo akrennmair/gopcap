@@ -172,7 +172,7 @@ func DatalinkValueToDescription(dlt int) string {
 	return ""
 }
 
-func Findalldevs() (ifs []Interface, err string) {
+func FindAllDevs() (ifs []Interface, err string) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
 	defer C.free(unsafe.Pointer(buf))

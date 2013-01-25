@@ -25,7 +25,7 @@ func main() {
 	var h *pcap.Pcap
 	var err string
 
-	ifs, err := pcap.Findalldevs()
+	ifs, err := pcap.FindAllDevs()
 	if len(ifs) == 0 {
 		fmt.Printf("Warning: no devices found : %s\n", err)
 	} else {
