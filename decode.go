@@ -19,6 +19,16 @@ const (
 	IP_UDP  = 17
 )
 
+
+// port from sf-pcap.c file
+const (
+	TCPDUMP_MAGIC = 0xa1b2c3d4
+	KUZNETZOV_TCPDUMP_MAGIC	= 0xa1b2cd34
+	FMESQUITA_TCPDUMP_MAGIC	= 0xa1b234cd
+	NAVTEL_TCPDUMP_MAGIC = 0xa12b3c4d
+	NSEC_TCPDUMP_MAGIC = 0xa1b23c4d
+)
+
 const (
 	ERRBUF_SIZE = 256
 
