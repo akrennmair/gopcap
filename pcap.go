@@ -193,7 +193,7 @@ func Findalldevs() (ifs []Interface, err string) {
 		var iface Interface
 		iface.Name = C.GoString(dev.name)
 		iface.Description = C.GoString(dev.description)
-		iface.Addresses = findalladdresses(dev.addresses)
+		iface.Addresses = findAllAddresses(dev.addresses)
 		// TODO: add more elements
 		ifs[j] = iface
 		j++
@@ -201,7 +201,7 @@ func Findalldevs() (ifs []Interface, err string) {
 	return
 }
 
-func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
+func findAllAddresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	// TODO - make it support more than IPv4 and IPv6?
 	retval = make([]IFAddress, 0, 1)
 	for curaddr := addresses; curaddr != nil; curaddr = (*_Ctype_struct_pcap_addr)(curaddr.next) {
