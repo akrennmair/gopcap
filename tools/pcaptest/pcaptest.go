@@ -55,7 +55,7 @@ func main() {
 
 	if *expr != "" {
 		fmt.Printf("Setting filter: %s\n", *expr)
-		err := h.Setfilter(*expr)
+		err := h.SetFilter(*expr)
 		if err != "" {
 			fmt.Printf("Warning: setting filter failed: %s\n", err)
 		}

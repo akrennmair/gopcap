@@ -134,7 +134,7 @@ func (p *Pcap) Getstats() (stat *Stat, err error) {
 	return stats, nil
 }
 
-func (p *Pcap) Setfilter(expr string) (err error) {
+func (p *Pcap) SetFilter(expr string) (err error) {
 	var bpf _Ctype_struct_bpf_program
 	cexpr := C.CString(expr)
 	defer C.free(unsafe.Pointer(cexpr))
@@ -151,7 +151,7 @@ func (p *Pcap) Setfilter(expr string) (err error) {
 	return nil
 }
 
-func (p *Pcap) Setdatalink(dlt int) error {
+func (p *Pcap) SetDataLink(dlt int) error {
 	if -1 == C.pcap_set_datalink(p.cptr, C.int(dlt)) {
 		return p.Geterror()
 	}

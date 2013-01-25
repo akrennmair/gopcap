@@ -62,7 +62,7 @@ func main() {
 	}
 
 	if expr != "" {
-		ferr := h.Setfilter(expr)
+		ferr := h.SetFilter(expr)
 		if ferr != nil {
 			fmt.Fprintf(out, "tcpdump: %s\n", ferr)
 			out.Flush()
