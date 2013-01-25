@@ -20,7 +20,7 @@ type FileHeader struct {
 	// NOTE: 'Network' property has been changed to `linktype`
 	// Please see pcap/pcap.h header file.
 	//     Network      uint32
-	LinkType int32
+	LinkType     uint32
 }
 
 type PacketTime struct {
