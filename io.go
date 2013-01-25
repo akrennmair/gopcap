@@ -16,7 +16,11 @@ type FileHeader struct {
 	TimeZone     int32
 	SigFigs      uint32
 	SnapLen      uint32
-	Network      uint32
+
+	// NOTE: 'Network' property has been changed to `linktype`
+	// Please see pcap/pcap.h header file.
+	//     Network      uint32
+	LinkType int32
 }
 
 type PacketTime struct {
@@ -73,7 +77,7 @@ func NewReader(reader io.Reader) (*Reader, error) {
 		TimeZone:     r.readInt32(),
 		SigFigs:      r.readUint32(),
 		SnapLen:      r.readUint32(),
-		Network:      r.readUint32(),
+		LinkType:      r.readUint32(),
 	}
 	return r, nil
 }
@@ -159,7 +163,7 @@ func NewWriter(writer io.Writer, header *FileHeader) (*Writer, error) {
 	binary.LittleEndian.PutUint32(w.buf[8:], uint32(header.TimeZone))
 	binary.LittleEndian.PutUint32(w.buf[12:], header.SigFigs)
 	binary.LittleEndian.PutUint32(w.buf[16:], header.SnapLen)
-	binary.LittleEndian.PutUint32(w.buf[20:], header.Network)
+	binary.LittleEndian.PutUint32(w.buf[20:], header.LinkType)
 	if _, err := writer.Write(w.buf); err != nil {
 		return nil, err
 	}
