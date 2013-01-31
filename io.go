@@ -16,27 +16,11 @@ type FileHeader struct {
 	TimeZone     int32
 	SigFigs      uint32
 	SnapLen      uint32
-	Network      uint32
-}
 
-type PacketTime struct {
-	Sec  int32
-	Usec int32
-}
-
-// Packet is a single packet parsed from a pcap file.
-type Packet struct {
-	Time   time.Time // packet send/receive time
-	Caplen uint32    // bytes stored in the file (caplen <= len)
-	Len    uint32    // bytes sent/received
-	Data   []byte    // packet data
-
-	Type    int // protocol type, see LINKTYPE_*
-	DestMac uint64
-	SrcMac  uint64
-
-	Headers []interface{} // decoded headers, in order
-	Payload []byte        // remaining non-header bytes
+	// NOTE: 'Network' property has been changed to `linktype`
+	// Please see pcap/pcap.h header file.
+	//     Network      uint32
+	LinkType uint32
 }
 
 // Reader parses pcap files.
@@ -73,7 +57,7 @@ func NewReader(reader io.Reader) (*Reader, error) {
 		TimeZone:     r.readInt32(),
 		SigFigs:      r.readUint32(),
 		SnapLen:      r.readUint32(),
-		Network:      r.readUint32(),
+		LinkType:     r.readUint32(),
 	}
 	return r, nil
 }
@@ -95,7 +79,7 @@ func (r *Reader) Next() *Packet {
 		return nil
 	}
 	return &Packet{
-		Time: time.Unix(int64(timeSec), int64(timeUsec)),
+		Time:   time.Unix(int64(timeSec), int64(timeUsec)),
 		Caplen: capLen,
 		Len:    origLen,
 		Data:   data,
@@ -159,7 +143,7 @@ func NewWriter(writer io.Writer, header *FileHeader) (*Writer, error) {
 	binary.LittleEndian.PutUint32(w.buf[8:], uint32(header.TimeZone))
 	binary.LittleEndian.PutUint32(w.buf[12:], header.SigFigs)
 	binary.LittleEndian.PutUint32(w.buf[16:], header.SnapLen)
-	binary.LittleEndian.PutUint32(w.buf[20:], header.Network)
+	binary.LittleEndian.PutUint32(w.buf[20:], header.LinkType)
 	if _, err := writer.Write(w.buf); err != nil {
 		return nil, err
 	}

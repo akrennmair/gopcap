@@ -25,7 +25,7 @@ func main() {
 	var h *pcap.Pcap
 	var err string
 
-	ifs, err := pcap.Findalldevs()
+	ifs, err := pcap.FindAllDevs()
 	if len(ifs) == 0 {
 		fmt.Printf("Warning: no devices found : %s\n", err)
 	} else {
@@ -35,13 +35,13 @@ func main() {
 	}
 
 	if *device != "" {
-		h, err = pcap.Openlive(*device, 65535, true, 0)
+		h, err = pcap.OpenLive(*device, 65535, true, 0)
 		if h == nil {
-			fmt.Printf("Openlive(%s) failed: %s\n", *device, err)
+			fmt.Printf("OpenLive(%s) failed: %s\n", *device, err)
 			return
 		}
 	} else if *file != "" {
-		h, err = pcap.Openoffline(*file)
+		h, err = pcap.OpenOffline(*file)
 		if h == nil {
 			fmt.Printf("Openoffline(%s) failed: %s\n", *file, err)
 			return
@@ -55,7 +55,7 @@ func main() {
 
 	if *expr != "" {
 		fmt.Printf("Setting filter: %s\n", *expr)
-		err := h.Setfilter(*expr)
+		err := h.SetFilter(*expr)
 		if err != "" {
 			fmt.Printf("Warning: setting filter failed: %s\n", err)
 		}

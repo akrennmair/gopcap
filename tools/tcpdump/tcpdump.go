@@ -44,7 +44,7 @@ func main() {
 	}
 
 	if *device == "" {
-		devs, err := pcap.Findalldevs()
+		devs, err := pcap.FindAllDevs()
 		if err != "" {
 			fmt.Fprintf(errout, "tcpdump: couldn't find any devices: %s\n", err)
 		}
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	if expr != "" {
-		ferr := h.Setfilter(expr)
+		ferr := h.SetFilter(expr)
 		if ferr != nil {
 			fmt.Fprintf(out, "tcpdump: %s\n", ferr)
 			out.Flush()

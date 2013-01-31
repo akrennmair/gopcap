@@ -16,8 +16,8 @@ import (
 	"errors"
 	"net"
 	"syscall"
-	"unsafe"
 	"time"
+	"unsafe"
 )
 
 type Pcap struct {
@@ -51,7 +51,7 @@ func (e *pcapError) Error() string  { return e.string }
 func (p *Pcap) Geterror() error     { return &pcapError{C.GoString(C.pcap_geterr(p.cptr))} }
 func (p *Pcap) Next() (pkt *Packet) { rv, _ := p.NextEx(); return rv }
 
-// Openlive opens a device and returns a *Pcap handler
+// OpenLive opens a device and returns a *Pcap handler
 func OpenLive(device string, snaplen int32, promisc bool, timeout_ms int32) (handle *Pcap, err error) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
@@ -134,7 +134,7 @@ func (p *Pcap) Getstats() (stat *Stat, err error) {
 	return stats, nil
 }
 
-func (p *Pcap) Setfilter(expr string) (err error) {
+func (p *Pcap) SetFilter(expr string) (err error) {
 	var bpf _Ctype_struct_bpf_program
 	cexpr := C.CString(expr)
 	defer C.free(unsafe.Pointer(cexpr))
@@ -151,7 +151,7 @@ func (p *Pcap) Setfilter(expr string) (err error) {
 	return nil
 }
 
-func (p *Pcap) Setdatalink(dlt int) error {
+func (p *Pcap) SetDataLink(dlt int) error {
 	if -1 == C.pcap_set_datalink(p.cptr, C.int(dlt)) {
 		return p.Geterror()
 	}
@@ -172,7 +172,7 @@ func DatalinkValueToDescription(dlt int) string {
 	return ""
 }
 
-func Findalldevs() (ifs []Interface, err string) {
+func FindAllDevs() (ifs []Interface, err string) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
 	defer C.free(unsafe.Pointer(buf))
@@ -193,7 +193,7 @@ func Findalldevs() (ifs []Interface, err string) {
 		var iface Interface
 		iface.Name = C.GoString(dev.name)
 		iface.Description = C.GoString(dev.description)
-		iface.Addresses = findalladdresses(dev.addresses)
+		iface.Addresses = findAllAddresses(dev.addresses)
 		// TODO: add more elements
 		ifs[j] = iface
 		j++
@@ -201,16 +201,16 @@ func Findalldevs() (ifs []Interface, err string) {
 	return
 }
 
-func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
+func findAllAddresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	// TODO - make it support more than IPv4 and IPv6?
 	retval = make([]IFAddress, 0, 1)
 	for curaddr := addresses; curaddr != nil; curaddr = (*_Ctype_struct_pcap_addr)(curaddr.next) {
 		var a IFAddress
 		var err error
-		if a.IP, err = sockaddr_to_IP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
+		if a.IP, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
 			continue
 		}
-		if a.Netmask, err = sockaddr_to_IP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
+		if a.Netmask, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
 			continue
 		}
 		retval = append(retval, a)
@@ -218,7 +218,7 @@ func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	return
 }
 
-func sockaddr_to_IP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
+func sockaddrToIP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	switch rsa.Family {
 	case syscall.AF_INET:
 		pp := (*syscall.RawSockaddrInet4)(unsafe.Pointer(rsa))
@@ -239,6 +239,12 @@ func sockaddr_to_IP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	return
 }
 
+
+
+/*
+static int
+pcap_inject_pf(pcap_t *p, const void *buf, size_t size)
+*/
 func (p *Pcap) Inject(data []byte) (err error) {
 	buf := (*C.char)(C.malloc((C.size_t)(len(data))))
 
@@ -252,3 +258,4 @@ func (p *Pcap) Inject(data []byte) (err error) {
 	C.free(unsafe.Pointer(buf))
 	return
 }
+
