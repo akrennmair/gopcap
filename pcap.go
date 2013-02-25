@@ -93,28 +93,22 @@ func Openoffline(file string) (handle *Pcap, err error) {
 }
 
 func (p *Pcap) NextEx() (pkt *Packet, result int32) {
-	var pkthdr_ptr *C.struct_pcap_pkthdr
-	var pkthdr C.struct_pcap_pkthdr
+	var pkthdr *C.struct_pcap_pkthdr
 
 	var buf_ptr *C.u_char
 	var buf unsafe.Pointer
-	result = int32(C.hack_pcap_next_ex(p.cptr, &pkthdr_ptr, &buf_ptr))
+	result = int32(C.hack_pcap_next_ex(p.cptr, &pkthdr, &buf_ptr))
 
 	buf = unsafe.Pointer(buf_ptr)
-	pkthdr = *pkthdr_ptr
-
 	if nil == buf {
 		return
 	}
+
 	pkt = new(Packet)
 	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec)*1000)
 	pkt.Caplen = uint32(pkthdr.caplen)
 	pkt.Len = uint32(pkthdr.len)
-	pkt.Data = make([]byte, pkthdr.caplen)
-
-	for i := uint32(0); i < pkt.Caplen; i++ {
-		pkt.Data[i] = *(*byte)(unsafe.Pointer(uintptr(buf) + uintptr(i)))
-	}
+	pkt.Data = C.GoBytes(buf, C.int(pkthdr.caplen))
 	return
 }
 
