@@ -110,6 +110,9 @@ func (p *Packet) decodeArp() {
 }
 
 func (p *Packet) decodeIp() {
+	if len(p.Payload) < 20 {
+		return
+	}
 	pkt := p.Payload
 	ip := new(Iphdr)
 
@@ -130,7 +133,11 @@ func (p *Packet) decodeIp() {
 	if pEnd > len(pkt) {
 		pEnd = len(pkt)
 	}
-	p.Payload = pkt[ip.Ihl*4 : pEnd]
+	pIhl := int(ip.Ihl) * 4
+	if pIhl > pEnd {
+		pIhl = pEnd
+	}
+	p.Payload = pkt[pIhl:pEnd]
 	p.Headers = append(p.Headers, ip)
 
 	switch ip.Protocol {
@@ -146,6 +153,10 @@ func (p *Packet) decodeIp() {
 }
 
 func (p *Packet) decodeTcp() {
+	pLenPayload := len(p.Payload)
+	if pLenPayload < 20 {
+		return
+	}
 	pkt := p.Payload
 	tcp := new(Tcphdr)
 	tcp.SrcPort = binary.BigEndian.Uint16(pkt[0:2])
@@ -157,11 +168,18 @@ func (p *Packet) decodeTcp() {
 	tcp.Window = binary.BigEndian.Uint16(pkt[14:16])
 	tcp.Checksum = binary.BigEndian.Uint16(pkt[16:18])
 	tcp.Urgent = binary.BigEndian.Uint16(pkt[18:20])
-	p.Payload = pkt[tcp.DataOffset*4:]
+	pDataOffset := int(tcp.DataOffset * 4)
+	if pDataOffset > pLenPayload {
+		pDataOffset = pLenPayload
+	}
+	p.Payload = pkt[pDataOffset:]
 	p.Headers = append(p.Headers, tcp)
 }
 
 func (p *Packet) decodeUdp() {
+	if len(p.Payload) < 8 {
+		return
+	}
 	pkt := p.Payload
 	udp := new(Udphdr)
 	udp.SrcPort = binary.BigEndian.Uint16(pkt[0:2])
@@ -173,6 +191,9 @@ func (p *Packet) decodeUdp() {
 }
 
 func (p *Packet) decodeIcmp() *Icmphdr {
+	if len(p.Payload) < 8 {
+		return nil
+	}
 	pkt := p.Payload
 	icmp := new(Icmphdr)
 	icmp.Type = pkt[0]
@@ -186,6 +207,9 @@ func (p *Packet) decodeIcmp() *Icmphdr {
 }
 
 func (p *Packet) decodeIp6() {
+	if len(p.Payload) < 40 {
+		return
+	}
 	pkt := p.Payload
 	ip6 := new(Ip6hdr)
 	ip6.Version = uint8(pkt[0]) >> 4
