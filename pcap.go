@@ -6,9 +6,10 @@ package pcap
 #include <pcap.h>
 
 // Workaround for not knowing how to cast to const u_char**
-int hack_pcap_next_ex(pcap_t *p, struct pcap_pkthdr **pkt_header,
-                      u_char **pkt_data) {
-    return pcap_next_ex(p, pkt_header, (const u_char **)pkt_data);
+int hack_pcap_next_ex(pcap_t * p, struct pcap_pkthdr **pkt_header,
+		      u_char ** pkt_data)
+{
+	return pcap_next_ex(p, pkt_header, (const u_char **)pkt_data);
 }
 */
 import "C"
@@ -51,7 +52,7 @@ func (e *pcapError) Error() string  { return e.string }
 func (p *Pcap) Geterror() error     { return &pcapError{C.GoString(C.pcap_geterr(p.cptr))} }
 func (p *Pcap) Next() (pkt *Packet) { rv, _ := p.NextEx(); return rv }
 
-// OpenLive opens a device and returns a *Pcap handler
+// OpenLive opens a device and returns a handler.
 func OpenLive(device string, snaplen int32, promisc bool, timeout_ms int32) (handle *Pcap, err error) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
@@ -93,6 +94,11 @@ func OpenOffline(file string) (handle *Pcap, err error) {
 	}
 	C.free(unsafe.Pointer(buf))
 	return
+}
+
+// Pcap closes a handler.
+func (p *Pcap) Close() {
+	C.pcap_close(p.cptr)
 }
 
 func (p *Pcap) NextEx() (pkt *Packet, result int32) {
@@ -239,8 +245,6 @@ func sockaddrToIP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	return
 }
 
-
-
 /*
 static int
 pcap_inject_pf(pcap_t *p, const void *buf, size_t size)
@@ -258,4 +262,3 @@ func (p *Pcap) Inject(data []byte) (err error) {
 	C.free(unsafe.Pointer(buf))
 	return
 }
-
