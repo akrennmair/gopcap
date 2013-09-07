@@ -17,7 +17,7 @@ const (
 	IP_UDP  = 17
 )
 
-// port from sf-pcap.c file
+// Port from sf-pcap.c file.
 const (
 	TCPDUMP_MAGIC           = 0xa1b2c3d4
 	KUZNETZOV_TCPDUMP_MAGIC = 0xa1b2cd34
@@ -26,11 +26,9 @@ const (
 	NSEC_TCPDUMP_MAGIC      = 0xa1b23c4d
 )
 
-/**
- * DLT
- * These are the types that are the same on all platforms, and that
- * have been defined by <net/bpf.h> for ages.
- */
+// DLT,
+// these are the types that are the same on all platforms, and that
+// have been defined by <net/bpf.h> for ages.
 const (
 	DLT_NULL    = 0  // BSD loopback encapsulation
 	DLT_EN10MB  = 1  // Ethernet (10Mb)
@@ -131,7 +129,7 @@ func (arp *Arphdr) String() (s string) {
 	return
 }
 
-// IPadr is the header of an IP packet.
+// IPhdr is the header of an IP packet.
 type Iphdr struct {
 	Version    uint8
 	Ihl        uint8

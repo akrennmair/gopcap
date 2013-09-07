@@ -1,3 +1,4 @@
+// Package pcap is a wrapper around the pcap library.
 package pcap
 
 /*
@@ -13,6 +14,7 @@ int hack_pcap_next_ex(pcap_t * p, struct pcap_pkthdr **pkt_header,
 }
 */
 import "C"
+
 import (
 	"errors"
 	"net"
@@ -245,10 +247,7 @@ func sockaddrToIP(rsa *syscall.RawSockaddr) (IP []byte, err error) {
 	return
 }
 
-/*
-static int
-pcap_inject_pf(pcap_t *p, const void *buf, size_t size)
-*/
+// Inject ...
 func (p *Pcap) Inject(data []byte) (err error) {
 	buf := (*C.char)(C.malloc((C.size_t)(len(data))))
 
