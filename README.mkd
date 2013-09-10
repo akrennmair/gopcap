@@ -9,3 +9,7 @@ how to use this library.
 Miek Gieben <miek@miek.nl> has created a more Go-like package and replaced functionality
 with standard functions from the standard library. The package has also been renamed to
 pcap.
+
+## TODO
+
+* Could use some more documentation
