@@ -54,6 +54,71 @@ func (e *pcapError) Error() string  { return e.string }
 func (p *Pcap) Geterror() error     { return &pcapError{C.GoString(C.pcap_geterr(p.cptr))} }
 func (p *Pcap) Next() (pkt *Packet) { rv, _ := p.NextEx(); return rv }
 
+func Create(device string) (handle *Pcap, err error) {
+	var buf *C.char
+	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
+	h := new(Pcap)
+
+	dev := C.CString(device)
+	defer C.free(unsafe.Pointer(dev))
+
+	h.cptr = C.pcap_create(dev, buf)
+	if nil == h.cptr {
+		handle = nil
+		err = &pcapError{C.GoString(buf)}
+	} else {
+		handle = h
+	}
+
+	C.free(unsafe.Pointer(buf))
+	return
+}
+
+// Set buffer size (units in bytes) on activated handle.
+func (p *Pcap) SetBufferSize(sz int32) error {
+	if C.pcap_set_buffer_size(p.cptr, C.int(sz)) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
+//  If arg p is non-zero promiscuous mode will be set on capture handle when it is activated.
+func (p *Pcap) SetPromisc(promisc bool) error {
+	var pro int32
+	if promisc {
+		pro = 1
+	}
+
+	if C.pcap_set_promisc(p.cptr, C.int(pro)) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
+func (p *Pcap) SetSnapLen(s int32) error {
+	if C.pcap_set_snaplen(p.cptr, C.int(s)) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
+// Set read timeout (milliseconds) that will be used on a capture handle when it is activated.
+func (p *Pcap) SetReadTimeout(toMs int32) error {
+	if C.pcap_set_timeout(p.cptr, C.int(toMs)) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
+// Activate a packet capture handle to look at packets on the network, with the options that
+// were set on the handle being in effect.
+func (p *Pcap) Activate() error {
+	if C.pcap_activate(p.cptr) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
 // OpenLive opens a device and returns a handler.
 func OpenLive(device string, snaplen int32, promisc bool, timeout_ms int32) (handle *Pcap, err error) {
 	var buf *C.char
