@@ -28,22 +28,22 @@ func testPcapHandle(t *testing.T, newHandle pcapNewHandleFunc) {
         t.Fatalf("Failed to create/init pcap handle err:%s", err)
     }
 
-    num := 5
-    go udpSvr(port, num, t)
-    go udpClient(port, num, 1 * time.Second, t)
+    numPkts := 5
+    go udpSvr(port, numPkts, t)
+    go udpClient(port, numPkts, 1 * time.Second, t)
 
-    count := 0
+    pktsRecvd := 0
     for pkt := h.Next(); pkt != nil; pkt = h.Next() {
         pkt.Decode()
-        t.Logf("Packet:%s len:%d", pkt, len(pkt.Payload))
-        count += 1
+        t.Logf("Packet:%s dataLen:%d", pkt, len(pkt.Payload))
+        pktsRecvd += 1
     }
 
-    if count < 5 {
-        t.Fatalf("Capture failed num:%d, total received:%d", num, count)
-    } else {
-        t.Logf("Successfully captured %d packets", count)
+    if pktsRecvd != numPkts {
+        t.Fatalf("Capture failed pkts-send:%d, pkts-recvd:%d", numPkts, pktsRecvd)
     }
+
+    t.Logf("Successfully captured %d packets", numPkts)
 }
 
 func TestPcapCreate(t *testing.T) {
@@ -88,7 +88,6 @@ func pcapCreate(intf string, filter string, readTo int32) (h *Pcap, err error) {
     return
 }
 
-
 func pcapOpenLive(intf string, filter string, readTo int32) (h *Pcap, err error) {
     h, err = OpenLive(intf, 65535, true, readTo)
 	if h == nil || err != nil {
@@ -103,7 +102,9 @@ func pcapOpenLive(intf string, filter string, readTo int32) (h *Pcap, err error)
     return
 }
 
-func udpClient(port int, num int, wait time.Duration, t *testing.T) {
+// Udp client which sends a fixed num of packets to given port after a fixed delay.
+// Delay ensures that capture code is ready to recv packets. 
+func udpClient(port int, numPkts int, wait time.Duration, t *testing.T) {
     time.Sleep(wait)
 
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", port))
@@ -121,7 +122,7 @@ func udpClient(port int, num int, wait time.Duration, t *testing.T) {
     t.Logf("Start packets to port:%d", port)
 
     pkt := []byte("hello")
-    for i := 0 ; i < num; i++ {
+    for i := 0 ; i < numPkts; i++ {
         if l, err := conn.Write(pkt); err != nil || l != len(pkt) {
 		    t.Logf("ERROR Failed to send packet size:%d wlen:%d err:%s", len(pkt), l, err)
         }
@@ -130,7 +131,8 @@ func udpClient(port int, num int, wait time.Duration, t *testing.T) {
     t.Logf("Completed sending packets to port:%d", port)
 }
 
-func udpSvr(port int, num int, t *testing.T) {
+// Udp server which listens on a port and recvs a fixed number of packets.
+func udpSvr(port int, numPkts int, t *testing.T) {
     addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("localhost:%d", port))
     if err != nil {
 		t.Logf("ERROR UDP Server: failed to resolve udp addr err:%s", err)
@@ -144,10 +146,12 @@ func udpSvr(port int, num int, t *testing.T) {
 	}
 
     buf := make([]byte, 10, 1024)
-    for i := 0 ; i < num; i++ {
+    for i := 0 ; i < numPkts; i++ {
         _, _, err := sock.ReadFromUDP(buf)
         if err != nil {
             t.Logf("Failed to recv packets on port:%d err:%s", port, err)
         }
     }
+
+    sock.Close()
 }
