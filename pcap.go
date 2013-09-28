@@ -278,6 +278,9 @@ func findAllAddresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 	// TODO - make it support more than IPv4 and IPv6?
 	retval = make([]IFAddress, 0, 1)
 	for curaddr := addresses; curaddr != nil; curaddr = (*_Ctype_struct_pcap_addr)(curaddr.next) {
+		if curaddr.addr == nil {
+			continue
+		}
 		var a IFAddress
 		var err error
 		if a.IP, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
