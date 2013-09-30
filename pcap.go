@@ -286,7 +286,7 @@ func findAllAddresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
 		if a.IP, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
 			continue
 		}
-		if a.Netmask, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
+		if a.Netmask, err = sockaddrToIP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.netmask))); err != nil {
 			continue
 		}
 		retval = append(retval, a)
