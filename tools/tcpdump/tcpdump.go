@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -20,20 +19,17 @@ const (
 	IP_UDP  = 17
 )
 
-var out *bufio.Writer
-var errout *bufio.Writer
+var (
+	device  = flag.String("i", "", "interface")
+	snaplen = flag.Int("s", 65535, "snaplen")
+	hexdump = flag.Bool("X", false, "hexdump")
+)
 
 func main() {
-	var device *string = flag.String("i", "", "interface")
-	var snaplen *int = flag.Int("s", 65535, "snaplen")
-	var hexdump *bool = flag.Bool("X", false, "hexdump")
 	expr := ""
 
-	out = bufio.NewWriter(os.Stdout)
-	errout = bufio.NewWriter(os.Stderr)
-
 	flag.Usage = func() {
-		fmt.Fprintf(errout, "usage: %s [ -i interface ] [ -s snaplen ] [ -X ] [ expression ]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [ -i interface ] [ -s snaplen ] [ -X ] [ expression ]\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -46,7 +42,7 @@ func main() {
 	if *device == "" {
 		devs, err := pcap.FindAllDevs()
 		if err != "" {
-			fmt.Fprintf(errout, "tcpdump: couldn't find any devices: %s\n", err)
+			fmt.Fprintln(os.Stderr, "tcpdump: couldn't find any devices:", err)
 		}
 		if 0 == len(devs) {
 			flag.Usage()
@@ -54,29 +50,34 @@ func main() {
 		*device = devs[0].Name
 	}
 
-	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 1000)
+	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 500)
 	if h == nil {
-		fmt.Fprintf(errout, "tcpdump: %s\n", err)
-		errout.Flush()
+		fmt.Fprintf(os.Stderr, "tcpdump:", err)
 		return
 	}
 
 	if expr != "" {
+		fmt.Println("tcpdump: setting filter to", expr)
 		ferr := h.SetFilter(expr)
 		if ferr != nil {
-			fmt.Fprintf(out, "tcpdump: %s\n", ferr)
-			out.Flush()
+			fmt.Println("tcpdump:", ferr)
 		}
 	}
 
-	for pkt := h.Next(); pkt != nil; pkt = h.Next() {
+	for pkt, r := h.NextEx(); r >= 0; pkt, r = h.NextEx() {
+		if r == 0 {
+			// timeout, continue
+			continue
+		}
 		pkt.Decode()
-		fmt.Fprintf(out, "%s\n", pkt.String())
+		fmt.Println(pkt)
 		if *hexdump {
 			Hexdump(pkt)
 		}
-		out.Flush()
+
 	}
+	fmt.Fprintln(os.Stderr, "tcpdump:", h.Geterror())
+
 }
 
 func min(a, b int) int {
@@ -93,27 +94,27 @@ func Hexdump(pkt *pcap.Packet) {
 }
 
 func Dumpline(addr uint32, line []byte) {
-	fmt.Fprintf(out, "\t0x%04x: ", int32(addr))
+	fmt.Printf("\t0x%04x: ", int32(addr))
 	var i uint16
 	for i = 0; i < 16 && i < uint16(len(line)); i++ {
 		if i%2 == 0 {
-			out.WriteString(" ")
+			fmt.Print(" ")
 		}
-		fmt.Fprintf(out, "%02x", line[i])
+		fmt.Printf("%02x", line[i])
 	}
 	for j := i; j <= 16; j++ {
 		if j%2 == 0 {
-			out.WriteString(" ")
+			fmt.Print(" ")
 		}
-		out.WriteString("  ")
+		fmt.Print("  ")
 	}
-	out.WriteString("  ")
+	fmt.Print("  ")
 	for i = 0; i < 16 && i < uint16(len(line)); i++ {
 		if line[i] >= 32 && line[i] <= 126 {
-			fmt.Fprintf(out, "%c", line[i])
+			fmt.Println("%c", line[i])
 		} else {
-			out.WriteString(".")
+			fmt.Print(".")
 		}
 	}
-	out.WriteString("\n")
+	fmt.Println()
 }
