@@ -183,7 +183,7 @@ func (p *Pcap) NextEx() (pkt *Packet, result int32) {
 		return
 	}
 	pkt = new(Packet)
-	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec))
+	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec) * 1000) // pcap provides usec but time.Unix requires nsec
 	pkt.Caplen = uint32(pkthdr.caplen)
 	pkt.Len = uint32(pkthdr.len)
 	pkt.Data = make([]byte, pkthdr.caplen)
