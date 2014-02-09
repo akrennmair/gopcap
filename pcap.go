@@ -224,6 +224,21 @@ func (p *Pcap) SetFilter(expr string) (err error) {
 	return nil
 }
 
+func (p *Pcap) SetDirection(direction string) (err error) {
+    var pcap_direction C.pcap_direction_t
+    if (direction == "in") {
+        pcap_direction = C.PCAP_D_IN
+    } else if (direction == "out") {
+        pcap_direction = C.PCAP_D_OUT
+    } else {
+        pcap_direction = C.PCAP_D_INOUT
+    }
+    if -1 == C.pcap_setdirection(p.cptr, pcap_direction) {
+        return p.Geterror()
+    }
+    return nil
+}
+
 func (p *Pcap) SetDataLink(dlt int) error {
 	if -1 == C.pcap_set_datalink(p.cptr, C.int(dlt)) {
 		return p.Geterror()
