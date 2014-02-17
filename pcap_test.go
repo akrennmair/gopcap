@@ -3,6 +3,7 @@ package pcap
 import (
 	"fmt"
 	"net"
+	"os"
 	"testing"
 	"time"
 )
@@ -52,6 +53,63 @@ func TestPcapCreate(t *testing.T) {
 
 func TestPcapOpenLive(t *testing.T) {
 	testPcapHandle(t, pcapOpenLive)
+}
+
+func TestPcapDump(t *testing.T) {
+	port := 54321
+	h, err := pcapOpenLive("lo", fmt.Sprintf("udp dst port %d", port), 2000)
+	if h == nil || err != nil {
+		if h != nil {
+			h.Close()
+		}
+		t.Fatalf("Failed to create/init pcap handle err:%s", err)
+	}
+
+	ofile := "test/pcap_files/dump_test.pcap"
+	d, err := h.DumpOpen(&ofile)
+	if d == nil || err != nil {
+		return
+	}
+
+	numPkts := 5
+	go udpSvr(port, numPkts, t)
+	go udpClient(port, numPkts, 1*time.Second, t)
+
+	r, err := h.PcapLoop(5, d)
+	if r < 0 || err != nil {
+		return
+	}
+
+	h.PcapDumpClose(d)
+	h.Close()
+
+	newh, err := OpenOffline(ofile)
+	if newh == nil {
+		t.Fatalf("Failed to open pcap:%s", err)
+		return
+	}
+	t.Log("Successfully open pcap")
+
+	pktsRecvd := 0
+	for pkt := newh.Next(); pkt != nil; pkt = newh.Next() {
+		pkt.Decode()
+		t.Logf("Packet:%s dataLen:%d", pkt, len(pkt.Payload))
+		pktsRecvd += 1
+	}
+	newh.Close()
+
+	if pktsRecvd != numPkts {
+		t.Fatalf("Capture failed pkts-send:%d, pkts-recvd:%d", numPkts, pktsRecvd)
+	}
+
+	t.Logf("Successfully captured %d packets", numPkts)
+
+	err = os.Remove(ofile)
+	if err != nil {
+		t.Fatalf("Failed to remote pcap file", err)
+	}
+
+	return
 }
 
 func pcapCreate(intf string, filter string, readTo int32) (h *Pcap, err error) {

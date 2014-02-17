@@ -12,6 +12,12 @@ int hack_pcap_next_ex(pcap_t * p, struct pcap_pkthdr **pkt_header,
 {
 	return pcap_next_ex(p, pkt_header, (const u_char **)pkt_data);
 }
+
+void hack_pcap_dump(pcap_dumper_t * dumper, struct pcap_pkthdr *pkt_header,
+		      u_char * pkt_data)
+{
+    pcap_dump((u_char *)dumper, pkt_header, pkt_data);
+}
 */
 import "C"
 
@@ -25,6 +31,10 @@ import (
 
 type Pcap struct {
 	cptr *C.pcap_t
+}
+
+type PcapDumper struct {
+	cptr *C.pcap_dumper_t
 }
 
 type pcapError struct{ string }
@@ -183,7 +193,7 @@ func (p *Pcap) NextEx() (pkt *Packet, result int32) {
 		return
 	}
 	pkt = new(Packet)
-	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec) * 1000) // pcap provides usec but time.Unix requires nsec
+	pkt.Time = time.Unix(int64(pkthdr.ts.tv_sec), int64(pkthdr.ts.tv_usec)*1000) // pcap provides usec but time.Unix requires nsec
 	pkt.Caplen = uint32(pkthdr.caplen)
 	pkt.Len = uint32(pkthdr.len)
 	pkt.Data = make([]byte, pkthdr.caplen)
@@ -327,5 +337,65 @@ func (p *Pcap) Inject(data []byte) (err error) {
 		err = p.Geterror()
 	}
 	C.free(unsafe.Pointer(buf))
+	return
+}
+
+func (p *Pcap) DumpOpen(ofile *string) (dumper *PcapDumper, err error) {
+	d := new(PcapDumper)
+	d.cptr = C.pcap_dump_open(p.cptr, C.CString(*ofile))
+	if nil == d.cptr {
+		err = errors.New("Cannot open dumpfile")
+	} else {
+		dumper = d
+	}
+	return
+}
+
+func (p *Pcap) PcapLoop(i int, dumper *PcapDumper) (result int32, err error) {
+	var pkthdr_ptr *C.struct_pcap_pkthdr
+	var buf_ptr *C.u_char
+	loop := false
+	if i <= 0 {
+		loop = true
+	}
+	for i > 0 || loop {
+		result = int32(C.hack_pcap_next_ex(p.cptr, &pkthdr_ptr, &buf_ptr))
+		switch result {
+		case 0:
+			continue // timeout
+		case 1:
+			// success : capturing packet
+		case -1:
+			err = errors.New("Error in pcap next ex")
+			return
+		case -2:
+			return // reach EOF in offline mode
+		}
+		if nil == buf_ptr {
+			continue
+		}
+		if nil != dumper {
+			p.PcapDump(dumper, pkthdr_ptr, buf_ptr)
+			p.PcapDumpFlush(dumper)
+		}
+		if !loop {
+			i--
+		}
+	}
+	return
+}
+
+func (p *Pcap) PcapDump(dumper *PcapDumper, pkthdr_ptr *C.struct_pcap_pkthdr, buf_ptr *C.u_char) (err error) {
+	C.hack_pcap_dump(dumper.cptr, pkthdr_ptr, buf_ptr)
+	return
+}
+
+func (p *Pcap) PcapDumpFlush(dumper *PcapDumper) (err error) {
+	C.pcap_dump_flush(dumper.cptr)
+	return
+}
+
+func (p *Pcap) PcapDumpClose(dumper *PcapDumper) (err error) {
+	C.pcap_dump_close(dumper.cptr)
 	return
 }
