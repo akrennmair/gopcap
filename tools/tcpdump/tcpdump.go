@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 
 	"github.com/miekg/pcap"
 )
@@ -21,15 +22,17 @@ const (
 
 var (
 	device  = flag.String("i", "", "interface")
+	ofile   = flag.String("w", "", "file")
 	snaplen = flag.Int("s", 65535, "snaplen")
 	hexdump = flag.Bool("X", false, "hexdump")
+	help    = flag.Bool("h", false, "help")
 )
 
 func main() {
 	expr := ""
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s [ -i interface ] [ -s snaplen ] [ -X ] [ expression ]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [ -i interface ] [ -s snaplen ] [ -X ] [ -w file ] [ -h show usage] [ expression ] \n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -37,6 +40,10 @@ func main() {
 
 	if len(flag.Args()) > 0 {
 		expr = flag.Arg(0)
+	}
+
+	if *help {
+		flag.Usage()
 	}
 
 	if *device == "" {
@@ -55,6 +62,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "tcpdump:", err)
 		return
 	}
+	defer h.Close()
 
 	if expr != "" {
 		fmt.Println("tcpdump: setting filter to", expr)
@@ -62,6 +70,20 @@ func main() {
 		if ferr != nil {
 			fmt.Println("tcpdump:", ferr)
 		}
+	}
+
+	if *ofile != "" {
+		dumper, oerr := h.DumpOpen(ofile)
+		addHandler(h, dumper)
+		if oerr != nil {
+			fmt.Fprintln(os.Stderr, "tcpdump: couldn't write to file:", oerr)
+		}
+		_, lerr := h.PcapLoop(0, dumper)
+		if lerr != nil {
+			fmt.Fprintln(os.Stderr, "tcpdump: loop error:", lerr, h.Geterror())
+		}
+		defer h.PcapDumpClose(dumper)
+		return
 	}
 
 	for pkt, r := h.NextEx(); r >= 0; pkt, r = h.NextEx() {
@@ -78,6 +100,21 @@ func main() {
 	}
 	fmt.Fprintln(os.Stderr, "tcpdump:", h.Geterror())
 
+}
+
+func addHandler(h *pcap.Pcap, dumper *pcap.PcapDumper) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			fmt.Fprintln(os.Stderr, "tcpdump: received signal:", sig)
+			if os.Interrupt == sig {
+				h.PcapDumpClose(dumper)
+				h.Close()
+				os.Exit(1)
+			}
+		}
+	}()
 }
 
 func min(a, b int) int {
