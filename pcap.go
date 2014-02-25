@@ -344,10 +344,9 @@ func (p *Pcap) DumpOpen(ofile *string) (dumper *PcapDumper, err error) {
 	d := new(PcapDumper)
 	d.cptr = C.pcap_dump_open(p.cptr, C.CString(*ofile))
 	if nil == d.cptr {
-		err = errors.New("Cannot open dumpfile")
-	} else {
-		dumper = d
+		return d, errors.New("Cannot open dumpfile")
 	}
+	dumper = d
 	return
 }
 
