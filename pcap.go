@@ -350,14 +350,11 @@ func (p *Pcap) DumpOpen(ofile *string) (dumper *PcapDumper, err error) {
 	return
 }
 
-func (p *Pcap) PcapLoop(i int, dumper *PcapDumper) (result int32, err error) {
+func (p *Pcap) PcapLoop(pktnum int, dumper *PcapDumper) (result int32, err error) {
 	var pkthdr_ptr *C.struct_pcap_pkthdr
 	var buf_ptr *C.u_char
-	loop := false
-	if i <= 0 {
-		loop = true
-	}
-	for i > 0 || loop {
+
+	for i := 0; true; {
 		result = int32(C.hack_pcap_next_ex(p.cptr, &pkthdr_ptr, &buf_ptr))
 		switch result {
 		case 0:
@@ -376,8 +373,11 @@ func (p *Pcap) PcapLoop(i int, dumper *PcapDumper) (result int32, err error) {
 			p.PcapDump(dumper, pkthdr_ptr, buf_ptr)
 			p.PcapDumpFlush(dumper)
 		}
-		if !loop {
-			i--
+		if pktnum > 0 {
+			i++
+			if i >= pktnum {
+				break
+			}
 		}
 	}
 	return
