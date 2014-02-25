@@ -366,8 +366,7 @@ func (p *Pcap) PcapLoop(i int, dumper *PcapDumper) (result int32, err error) {
 		case 1:
 			// success : capturing packet
 		case -1:
-			err = errors.New("Error in pcap next ex")
-			return
+			return result, errors.New("Error in pcap next ex")
 		case -2:
 			return // reach EOF in offline mode
 		}
@@ -385,17 +384,17 @@ func (p *Pcap) PcapLoop(i int, dumper *PcapDumper) (result int32, err error) {
 	return
 }
 
-func (p *Pcap) PcapDump(dumper *PcapDumper, pkthdr_ptr *C.struct_pcap_pkthdr, buf_ptr *C.u_char) (err error) {
+func (p *Pcap) PcapDump(dumper *PcapDumper, pkthdr_ptr *C.struct_pcap_pkthdr, buf_ptr *C.u_char) {
 	C.hack_pcap_dump(dumper.cptr, pkthdr_ptr, buf_ptr)
-	return
 }
 
-func (p *Pcap) PcapDumpFlush(dumper *PcapDumper) (err error) {
-	C.pcap_dump_flush(dumper.cptr)
-	return
+func (p *Pcap) PcapDumpFlush(dumper *PcapDumper) error {
+	if -1 == C.pcap_dump_flush(dumper.cptr) {
+		return p.Geterror()
+	}
+	return nil
 }
 
-func (p *Pcap) PcapDumpClose(dumper *PcapDumper) (err error) {
+func (p *Pcap) PcapDumpClose(dumper *PcapDumper) {
 	C.pcap_dump_close(dumper.cptr)
-	return
 }
