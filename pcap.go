@@ -2,7 +2,12 @@
 package pcap
 
 /*
-#cgo LDFLAGS: -lpcap
+#cgo linux LDFLAGS: -lpcap
+#cgo freebsd LDFLAGS: -lpcap
+#cgo darwin LDFLAGS: -lpcap
+#cgo windows CFLAGS: -I C:/WpdPack/Include
+#cgo windows,386 LDFLAGS: -L C:/WpdPack/Lib -lwpcap
+#cgo windows,amd64 LDFLAGS: -L C:/WpdPack/Lib/x64 -lwpcap
 #include <stdlib.h>
 #include <pcap.h>
 
@@ -253,7 +258,7 @@ func (p *Pcap) Inject(data []byte) (err error) {
 		*(*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(buf)) + uintptr(i))) = data[i]
 	}
 
-	if -1 == C.pcap_inject(p.cptr, unsafe.Pointer(buf), (C.size_t)(len(data))) {
+	if -1 == C.pcap_sendpacket(p.cptr, (*C.u_char)(unsafe.Pointer(buf)), (C.int)(len(data))) {
 		err = p.Geterror()
 	}
 	C.free(unsafe.Pointer(buf))
