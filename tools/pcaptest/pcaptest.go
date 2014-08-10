@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dustin/gopcap"
+	"github.com/miekg/pcap"
 )
 
 func min(x uint32, y uint32) uint32 {
@@ -23,7 +23,6 @@ func main() {
 	flag.Parse()
 
 	var h *pcap.Pcap
-	var err string
 
 	ifs, err := pcap.FindAllDevs()
 	if len(ifs) == 0 {
@@ -56,15 +55,15 @@ func main() {
 	if *expr != "" {
 		fmt.Printf("Setting filter: %s\n", *expr)
 		err := h.SetFilter(*expr)
-		if err != "" {
+		if err != nil {
 			fmt.Printf("Warning: setting filter failed: %s\n", err)
 		}
 	}
 
 	for pkt := h.Next(); pkt != nil; pkt = h.Next() {
 		fmt.Printf("time: %d.%06d (%s) caplen: %d len: %d\nData:",
-			int64(pkt.Time.Sec), int64(pkt.Time.Usec),
-			time.Unix(int64(pkt.Time.Sec), 0).String(), int64(pkt.Caplen), int64(pkt.Len))
+			int64(pkt.Time.Second()), int64(pkt.Time.Nanosecond()),
+			time.Unix(int64(pkt.Time.Second()), 0).String(), int64(pkt.Caplen), int64(pkt.Len))
 		for i := uint32(0); i < pkt.Caplen; i++ {
 			if i%32 == 0 {
 				fmt.Printf("\n")

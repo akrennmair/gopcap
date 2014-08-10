@@ -235,18 +235,18 @@ func (p *Pcap) SetFilter(expr string) (err error) {
 }
 
 func (p *Pcap) SetDirection(direction string) (err error) {
-    var pcap_direction C.pcap_direction_t
-    if (direction == "in") {
-        pcap_direction = C.PCAP_D_IN
-    } else if (direction == "out") {
-        pcap_direction = C.PCAP_D_OUT
-    } else {
-        pcap_direction = C.PCAP_D_INOUT
-    }
-    if -1 == C.pcap_setdirection(p.cptr, pcap_direction) {
-        return p.Geterror()
-    }
-    return nil
+	var pcap_direction C.pcap_direction_t
+	if direction == "in" {
+		pcap_direction = C.PCAP_D_IN
+	} else if direction == "out" {
+		pcap_direction = C.PCAP_D_OUT
+	} else {
+		pcap_direction = C.PCAP_D_INOUT
+	}
+	if -1 == C.pcap_setdirection(p.cptr, pcap_direction) {
+		return p.Geterror()
+	}
+	return nil
 }
 
 func (p *Pcap) SetDataLink(dlt int) error {
@@ -270,14 +270,14 @@ func DatalinkValueToDescription(dlt int) string {
 	return ""
 }
 
-func FindAllDevs() (ifs []Interface, err string) {
+func FindAllDevs() (ifs []Interface, err error) {
 	var buf *C.char
 	buf = (*C.char)(C.calloc(ERRBUF_SIZE, 1))
 	defer C.free(unsafe.Pointer(buf))
 	var alldevsp *C.pcap_if_t
 
 	if -1 == C.pcap_findalldevs((**C.pcap_if_t)(&alldevsp), buf) {
-		return nil, C.GoString(buf)
+		return nil, errors.New(C.GoString(buf))
 	}
 	defer C.pcap_freealldevs((*C.pcap_if_t)(alldevsp))
 	dev := alldevsp
