@@ -1,4 +1,4 @@
-# PCAP
+# PCAP [![Build Status](https://travis-ci.org/miekg/pcap.png)](https://travis-ci.org/miekg/pcap)
 
 This is a simple wrapper around libpcap for Go.  Originally written by Andreas
 Krennmair <ak@synflood.at> and only minorly touched up by Mark Smith <mark@qq.is>.
@@ -12,4 +12,4 @@ pcap.
 
 ## TODO
 
-* Could use some more documentation
+* Could use some more documentation.
