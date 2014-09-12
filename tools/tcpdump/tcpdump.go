@@ -48,7 +48,7 @@ func main() {
 
 	if *device == "" {
 		devs, err := pcap.FindAllDevs()
-		if err != "" {
+		if err != nil {
 			fmt.Fprintln(os.Stderr, "tcpdump: couldn't find any devices:", err)
 		}
 		if 0 == len(devs) {
