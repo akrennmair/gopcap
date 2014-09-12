@@ -3,3 +3,10 @@ language: go
 go:
   - 1.2
   - 1.3
+
+install:
+  - sudo apt-get install libpcap-dev
+
+#before_script:
+#  - go build -o $HOME/gopath/src/github.com/coreos/etcd/etcd.run github.com/coreos/etcd
+#  - $HOME/gopath/src/github.com/coreos/etcd/etcd.run &
