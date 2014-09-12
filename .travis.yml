@@ -9,5 +9,4 @@ install:
 # running tcpdump inside travis does not really work as a good test.
 script:
   - go build
-  - exit 0
-    #- sudo $GOROOT/bin/go test
+  #- sudo $GOROOT/bin/go test
