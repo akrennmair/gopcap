@@ -9,7 +9,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dustin/gopcap"
+	"github.com/miekg/pcap"
 )
 
 var input *string = flag.String("input", "", "input file")
