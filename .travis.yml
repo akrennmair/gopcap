@@ -7,6 +7,9 @@ go:
 install:
   - sudo apt-get install libpcap-dev
 
+script:
+  - sudo go test
+
 #before_script:
 #  - go build -o $HOME/gopath/src/github.com/coreos/etcd/etcd.run github.com/coreos/etcd
 #  - $HOME/gopath/src/github.com/coreos/etcd/etcd.run &
