@@ -34,6 +34,7 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Fprintf(errout, "usage: %s [ -i interface ] [ -s snaplen ] [ -X ] [ expression ]\n", os.Args[0])
+		errout.Flush()
 		os.Exit(1)
 	}
 
