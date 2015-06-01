@@ -159,6 +159,7 @@ func (p *Packet) decodeTcp() {
 	}
 	pkt := p.Payload
 	tcp := new(Tcphdr)
+	tcp.Data = pkt
 	tcp.SrcPort = binary.BigEndian.Uint16(pkt[0:2])
 	tcp.DestPort = binary.BigEndian.Uint16(pkt[2:4])
 	tcp.Seq = binary.BigEndian.Uint32(pkt[4:8])
