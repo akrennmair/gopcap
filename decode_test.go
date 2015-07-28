@@ -3,6 +3,7 @@ package pcap
 import (
 	"bytes"
 	"testing"
+	"time"
 )
 
 var testSimpleTcpPacket *Packet = &Packet{
@@ -190,5 +191,57 @@ func TestDecodeVlanPacket(t *testing.T) {
 	}
 	if _, ok := p.Headers[2].(*Tcphdr); !ok {
 		t.Errorf("Third header isn't TCP: %q", p.Headers[2])
+	}
+}
+
+func TestDecodeFuzzFallout(t *testing.T) {
+	testData := []struct {
+		Data []byte
+	}{
+		{[]byte("000000000000\x81\x000")},
+		{[]byte("000000000000\x81\x00000")},
+		{[]byte("000000000000\x86\xdd0")},
+		{[]byte("000000000000\b\x000")},
+		{[]byte("000000000000\b\x060")},
+		{[]byte{}},
+		{[]byte("000000000000\b\x0600000000")},
+		{[]byte("000000000000\x86\xdd000000\x01000000000000000000000000000000000")},
+		{[]byte("000000000000\x81\x0000\b\x0600000000")},
+		{[]byte("000000000000\b\x00n0000000000000000000")},
+		{[]byte("000000000000\x86\xdd000000\x0100000000000000000000000000000000000")},
+		{[]byte("000000000000\x81\x0000\b\x00g0000000000000000000")},
+		//{[]byte()},
+		{[]byte("000000000000\b\x00400000000\x110000000000")},
+		{[]byte("0nMء\xfe\x13\x13\x81\x00gr\b\x00&x\xc9\xe5b'\x1e0\x00\x04\x00\x0020596224")},
+		{[]byte("000000000000\x81\x0000\b\x00400000000\x110000000000")},
+		{[]byte("000000000000\b\x00000000000\x0600\xff0000000")},
+		{[]byte("000000000000\x86\xdd000000\x06000000000000000000000000000000000")},
+		{[]byte("000000000000\x81\x0000\b\x00000000000\x0600b0000000")},
+		{[]byte("000000000000\x81\x0000\b\x00400000000\x060000000000")},
+		{[]byte("000000000000\x86\xdd000000\x11000000000000000000000000000000000")},
+		{[]byte("000000000000\x86\xdd000000\x0600000000000000000000000000000000000000000000M")},
+		{[]byte("000000000000\b\x00500000000\x0600000000000")},
+		{[]byte("0nM\xd80\xfe\x13\x13\x81\x00gr\b\x00&x\xc9\xe5b'\x1e0\x00\x04\x00\x0020596224")},
+	}
+
+	for _, entry := range testData {
+		pkt := &Packet{
+			Time:   time.Now(),
+			Caplen: uint32(len(entry.Data)),
+			Len:    uint32(len(entry.Data)),
+			Data:   entry.Data,
+		}
+
+		pkt.Decode()
+		/*
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						t.Fatalf("%d. %q failed: %v", idx, string(entry.Data), err)
+					}
+				}()
+				pkt.Decode()
+			}()
+		*/
 	}
 }
