@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/akrennmair/gopcap"
+	"github.com/dgassaway/gopcap"
 )
 
 const (

@@ -7,7 +7,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/akrennmair/gopcap"
+	"github.com/dgassaway/gopcap"
 )
 
 func main() {
