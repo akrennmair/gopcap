@@ -126,7 +126,7 @@ func (p *Pcap) Geterror() error {
 }
 
 func (p *Pcap) Getstats() (stat *Stat, err error) {
-	var cstats _Ctype_struct_pcap_stat
+	var cstats C.struct_pcap_stat
 	if -1 == C.pcap_stats(p.cptr, &cstats) {
 		return nil, p.Geterror()
 	}
@@ -139,7 +139,7 @@ func (p *Pcap) Getstats() (stat *Stat, err error) {
 }
 
 func (p *Pcap) Setfilter(expr string) (err error) {
-	var bpf _Ctype_struct_bpf_program
+	var bpf C.struct_bpf_program
 	cexpr := C.CString(expr)
 	defer C.free(unsafe.Pointer(cexpr))
 
@@ -213,10 +213,10 @@ func Findalldevs() (ifs []Interface, err error) {
 	return
 }
 
-func findalladdresses(addresses *_Ctype_struct_pcap_addr) (retval []IFAddress) {
+func findalladdresses(addresses *C.struct_pcap_addr) (retval []IFAddress) {
 	// TODO - make it support more than IPv4 and IPv6?
 	retval = make([]IFAddress, 0, 1)
-	for curaddr := addresses; curaddr != nil; curaddr = (*_Ctype_struct_pcap_addr)(curaddr.next) {
+	for curaddr := addresses; curaddr != nil; curaddr = (*C.struct_pcap_addr)(curaddr.next) {
 		var a IFAddress
 		var err error
 		if a.IP, err = sockaddr_to_IP((*syscall.RawSockaddr)(unsafe.Pointer(curaddr.addr))); err != nil {
