@@ -38,6 +38,11 @@ func testPcapHandle(t *testing.T, newHandle pcapNewHandleFunc) {
 		pkt.Decode()
 		t.Logf("Packet:%s dataLen:%d", pkt, len(pkt.Payload))
 		pktsRecvd += 1
+		if pktsRecvd >= numPkts {
+			// some platforms ignore read timeout:
+			// https://github.com/the-tcpdump-group/libpcap/issues/550
+			break
+		}
 	}
 
 	if pktsRecvd != numPkts {
@@ -95,6 +100,11 @@ func TestPcapDump(t *testing.T) {
 		pkt.Decode()
 		t.Logf("Packet:%s dataLen:%d", pkt, len(pkt.Payload))
 		pktsRecvd += 1
+		if pktsRecvd >= numPkts {
+			// some platforms ignore read timeout:
+			// https://github.com/the-tcpdump-group/libpcap/issues/550
+			break
+		}
 	}
 	newh.Close()
 
@@ -106,7 +116,7 @@ func TestPcapDump(t *testing.T) {
 
 	err = os.Remove(ofile)
 	if err != nil {
-		t.Fatalf("Failed to remote pcap file", err)
+		t.Fatalf("Failed to remote pcap file: %s", err)
 	}
 
 	return
