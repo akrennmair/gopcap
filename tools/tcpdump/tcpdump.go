@@ -59,7 +59,7 @@ func main() {
 
 	h, err := pcap.OpenLive(*device, int32(*snaplen), true, 500)
 	if h == nil {
-		fmt.Fprintf(os.Stderr, "tcpdump:", err)
+		fmt.Fprintf(os.Stderr, "tcpdump: %s", err)
 		return
 	}
 	defer h.Close()
@@ -148,7 +148,7 @@ func Dumpline(addr uint32, line []byte) {
 	fmt.Print("  ")
 	for i = 0; i < 16 && i < uint16(len(line)); i++ {
 		if line[i] >= 32 && line[i] <= 126 {
-			fmt.Println("%c", line[i])
+			fmt.Printf("%c\n", line[i])
 		} else {
 			fmt.Print(".")
 		}
